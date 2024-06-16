@@ -1,5 +1,9 @@
+
 import { prisma } from "../server";
 import bcrypt from "bcrypt"
+import { UserSignUp } from "../types/type";
+import jwt from "jsonwebtoken"
+import { Response } from 'express';
 
 export const getUser = () => {
     return  {
@@ -13,8 +17,7 @@ export const getUser = () => {
 export const signUpUser = async (parent:any, args:any) => { 
 
     try {
-        const user = {...args.input};
-        console.log(user)
+        const user:UserSignUp = {...args.input};
         const email = await prisma.user.findFirst({
             where: {
                 email: args.input.email
@@ -39,8 +42,53 @@ export const signUpUser = async (parent:any, args:any) => {
     } catch (error:any) {
         return {
             status: 500,
-            message: error.message
+            message: error.message.toString(),
         }
     }
-    
+}
+
+export const signInUser = async (parent:any, args:any, context:any ) => {
+    const res:Response = context.res;
+    const req:Request = context.req;
+    try {
+        const {email, password} =  args;
+        const user = await prisma.user.findFirst({
+            where: {
+                email: email
+            }
+        })
+        
+        if(!user) {
+            return {
+                status: 400,
+                message: "Email or Password is wrong!!"
+            }
+        }
+
+        const chekPassword = bcrypt.compareSync(password, user.password);
+
+        if (!chekPassword) {
+            return {
+                status: 400,
+                message: "Email or Password is wrong!!"
+            }
+        }
+
+        const token = jwt.sign({username:user.username, email:user.email}, process.env.SECRET_KEY as string, { expiresIn: '1h'} )
+        res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 30,
+        })
+
+        return {
+            status: 200,
+            message: "Login successfully"
+        }
+
+    } catch (error:any) {
+        return {
+            status: 500,
+            message: JSON.parse(error.message),
+        }
+    }
 }
