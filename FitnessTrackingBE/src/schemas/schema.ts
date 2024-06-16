@@ -37,8 +37,8 @@ export const typeDefs = `#graphql
     }
 
     type Mutation {
-        signUpUser(input: SignUpUserInput): Message
-        signInUser(username: String!, password: String!): Message
+        signUpUser(input: SignUpUserInput!): Message!
+        signInUser(email: String!, password: String!): Message!
     }
-    
+
 `
