@@ -1,6 +1,9 @@
+
 import { prisma } from "../server";
 import bcrypt from "bcrypt"
 import { UserSignUp } from "../types/type";
+import jwt from "jsonwebtoken"
+import { Response } from 'express';
 
 export const getUser = () => {
     return  {
@@ -44,7 +47,9 @@ export const signUpUser = async (parent:any, args:any) => {
     }
 }
 
-export const signInUser = async (parent:any, args:any) => {
+export const signInUser = async (parent:any, args:any, context:any ) => {
+    const res:Response = context.res;
+    const req:Request = context.req;
     try {
         const {email, password} =  args;
         const user = await prisma.user.findFirst({
@@ -68,6 +73,12 @@ export const signInUser = async (parent:any, args:any) => {
                 message: "Email or Password is wrong!!"
             }
         }
+
+        const token = jwt.sign({username:user.username, email:user.email}, process.env.SECRET_KEY as string, { expiresIn: '1h'} )
+        res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 30,
+        })
 
         return {
             status: 200,

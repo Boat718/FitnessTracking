@@ -1,25 +1,40 @@
 import { ApolloServer } from "@apollo/server"
-import { startStandaloneServer } from '@apollo/server/standalone';
 import { PrismaClient } from "@prisma/client";
-import { configDotenv } from "dotenv";
 import { typeDefs } from "./schemas/schema";
 import { resolver } from "./resolvers/resolver";
+import { expressMiddleware } from '@apollo/server/express4';
+import {Application, Request , Response} from 'express'
+import express from "express";
+import  cookie  from 'cookie';
 
+const app: Application = express();
 const PORT = process.env.PORT as string;
 
 export const prisma = new PrismaClient({
     log:['query']
 })
 
-const server: ApolloServer = new ApolloServer({
-    typeDefs: typeDefs,
-    resolvers: resolver
-})
+interface Context {
+    token?: string;
+  }
 
-const { url } = await startStandaloneServer(server, {
-    listen:{
-        port:parseInt(PORT)
-    }
-})
+const server =  async () => {
+    
+    const apolloServer = new ApolloServer<Context>({
+        typeDefs: typeDefs,
+        resolvers: resolver,
+    })
+    await apolloServer.start();
 
-console.log(`🚀 Server ready at port ${url}`)
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use("/graphql", expressMiddleware(apolloServer, {
+        context: async ({ req, res }) => ({req, res})
+    }))
+
+    app.listen(PORT, () => {
+        console.log(`🚀 Server ready at http://localhost:${PORT}/graphql `)
+    })
+}
+
+server();
