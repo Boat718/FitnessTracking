@@ -1,11 +1,14 @@
+import { createAndUpdateUserProfile, getUserProfile } from "./userProfileResolver";
 import { getUser, signInUser, signUpUser } from "./userResolver";
 
 export const resolver = {
     Query: {
-        getUser
+        getUser,
+        getUserProfile
     },
     Mutation: {
         signUpUser,
-        signInUser
+        signInUser,
+        createAndUpdateUserProfile,
     }
 }

@@ -74,10 +74,12 @@ export const signInUser = async (parent:any, args:any, context:any ) => {
             }
         }
 
-        const token = jwt.sign({username:user.username, email:user.email}, process.env.SECRET_KEY as string, { expiresIn: '1h'} )
-        res.cookie("token", token, {
+        const token = jwt.sign({userId: user.id, username:user.username, email:user.email}, process.env.SECRET_KEY as string, { expiresIn: '1h'} )
+        res.cookie("access_token", token, {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 30,
+            sameSite:"none",
+            secure:true
         })
 
         return {

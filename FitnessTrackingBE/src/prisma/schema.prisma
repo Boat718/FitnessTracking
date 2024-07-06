@@ -14,6 +14,23 @@ model User {
   password String
   createdAT DateTime @default(now())
   updatedAT DateTime @updatedAt
+  userProfile UserProfile?
 
   @@map("users")
+}
+
+model UserProfile {
+  id Int @id @default(autoincrement())
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+  firstName String
+  lastName String
+  age Int
+  gender String
+  bio String
+  weight Int
+  height Int
+  avatar String
+  createdAT DateTime @default(now())
+  updatedAT DateTime @updatedAt
 }
